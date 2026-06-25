@@ -1,3 +1,8 @@
+import os
+if not os.path.exists("models") or not any(f.endswith(".pkl") for f in os.listdir("models")):
+    import subprocess
+    subprocess.run(["python", "app/train.py"], check=True)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # app/main.py  — Credit Risk Prediction Dashboard
 # Run: streamlit run app/main.py
