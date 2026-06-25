@@ -46,7 +46,7 @@ Built to solve real fintech problems like those at PayU: *"Will this customer pa
 
 ## Quick Start
 
-\`\`\`bash
+```bash
 # 1. Setup
 python3 -m venv venv
 source venv/bin/activate
@@ -60,11 +60,11 @@ streamlit run app.py
 
 # 4. Run tests
 pytest tests/ -v
-\`\`\`
+```
 
 ## Project Structure
 
-\`\`\`
+```
 credit-risk-prediction/
 ├── app.py                    # Entry point (HF Spaces)
 ├── app/
@@ -77,7 +77,7 @@ credit-risk-prediction/
 ├── tests/
 │   └── test_credit_risk.py   # 18 pytest cases
 └── requirements.txt
-\`\`\`
+```
 
 ## Dataset
 
