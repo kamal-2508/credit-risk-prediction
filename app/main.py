@@ -208,9 +208,9 @@ def main():
         st.stop()
 
     # ── Tabs ──────────────────────────────────────────────────────────────────
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "🔮 Predict Risk", "📊 Model Performance",
-        "🔍 Feature Importance", "📈 Data Explorer"
+        "🔍 Feature Importance", "📈 Data Explorer", "🧠 SHAP Explainability"
     ])
 
     # ── Tab 1: Predict ────────────────────────────────────────────────────────
@@ -448,6 +448,37 @@ Measures the maximum separation between default and non-default score distributi
 
         except Exception as e:
             st.error(f"Could not load data: {e}")
+
+
+    # ── Tab 5: SHAP ───────────────────────────────────────────────────────────
+    with tab5:
+        st.subheader("🧠 SHAP Explainability")
+        st.caption("Why did the model make this prediction?")
+        try:
+            import shap
+            import matplotlib.pyplot as plt
+            df = load_data_for_eda()
+            X  = df.drop(columns=["target"])
+            for col in feature_cols:
+                if col not in X.columns:
+                    X[col] = 0
+            X = X[feature_cols]
+            model_for_shap = models.get("random_forest") or models.get("gradient_boosting")
+            if model_for_shap:
+                with st.spinner("Computing SHAP values..."):
+                    explainer   = shap.TreeExplainer(model_for_shap)
+                    shap_obj    = explainer(X.iloc[:100])
+                    shap_values = shap_obj.values
+                    if shap_values.ndim == 3:
+                        shap_values = shap_values[:, :, 1]
+                import matplotlib.pyplot as plt
+                fig, ax = plt.subplots(figsize=(10, 8))
+                shap.summary_plot(shap_values, X.iloc[:100], feature_names=list(X.columns), show=False, max_display=15)
+                st.pyplot(fig)
+                plt.close()
+                st.caption("Red = increases default risk | Blue = decreases default risk")
+        except Exception as e:
+            st.error(f"SHAP error: {e}")
 
 
 if __name__ == "__main__":
