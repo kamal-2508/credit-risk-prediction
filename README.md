@@ -44,6 +44,47 @@ Built to solve real fintech problems like those at PayU: *"Will this customer pa
 - 📈 **Data Explorer** — visualize dataset distributions
 - 🧠 **SHAP Explainability** — why was this applicant approved/rejected?
 
+
+## 🚀 API (FastAPI)
+
+Run the REST API locally:
+
+```bash
+uvicorn api:app --reload
+```
+
+Swagger docs: http://127.0.0.1:8000/docs
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/models` | List all 6 models |
+| GET | `/metrics` | AUC/KS/Gini scores |
+| POST | `/predict` | Single applicant risk score |
+| POST | `/predict/batch` | Up to 100 applicants at once |
+
+### Example Request
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"credit_amount": 5000, "duration": 24, "age": 35, "checking_account": "A14", "savings_account": "A61", "employment_since": "A73", "purpose": "A43", "installment_rate": 2, "model_name": "stacking_ensemble"}'
+```
+
+### Example Response
+
+```json
+{
+  "risk_score": 47.71,
+  "risk_label": "Medium Risk",
+  "decision": "REVIEW",
+  "default_probability": 0.4771,
+  "key_risk_factors": ["Poor or no checking account", "Low savings"]
+}
+```
+
 ## Quick Start
 
 ```bash
