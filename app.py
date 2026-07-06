@@ -16,10 +16,13 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import plotly.express as px
+import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 sys.path.insert(0, os.path.dirname(__file__))
+from app.statistical_analysis import test_normality, ks_separation_analysis
 from data.load_data import load_processed_data
 from app.features import engineer_features, get_feature_names
 
@@ -213,9 +216,9 @@ def main():
         st.stop()
 
     # ── Tabs ──────────────────────────────────────────────────────────────────
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🔮 Predict Risk", "📊 Model Performance",
-        "🔍 Feature Importance", "📈 Data Explorer", "🧠 SHAP Explainability"
+        "🔍 Feature Importance", "📈 Data Explorer", "🧠 SHAP Explainability", "📐 Statistical Analysis"
     ])
 
     # ── Tab 1: Predict ────────────────────────────────────────────────────────
@@ -485,6 +488,38 @@ Measures the maximum separation between default and non-default score distributi
         except Exception as e:
             st.error(f"SHAP error: {e}")
 
+
+
+    # ── Tab 6: Statistical Analysis ─────────────────────────────────────────
+    with tab6:
+        st.subheader("📐 Statistical & Probabilistic Analysis")
+        st.caption("Non-Gaussian distribution modelling · KS separation")
+        try:
+            df = load_data_for_eda()
+            num_features = ["duration", "credit_amount", "installment_rate",
+                           "age", "existing_credits", "monthly_repayment",
+                           "installment_burden", "credit_per_age"]
+            num_features = [f for f in num_features if f in df.columns]
+            with st.spinner("Running statistical analysis..."):
+                normality_df  = test_normality(df, num_features)
+                separation_df = ks_separation_analysis(df, num_features)
+            n_nongaussian = (normality_df['is_gaussian'] == False).sum()
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Features Tested", len(num_features))
+            col2.metric("Non-Gaussian", f"{n_nongaussian}/{len(num_features)}")
+            col3.metric("Gaussian", f"{len(num_features)-n_nongaussian}/{len(num_features)}")
+            st.markdown("### 1️⃣ Normality Tests (Shapiro-Wilk)")
+            st.caption("p < 0.05 = Non-Gaussian confirmed")
+            st.dataframe(normality_df[["feature","verdict","skewness","kurtosis","p_value"]], use_container_width=True)
+            st.markdown("### 2️⃣ KS Separation (Defaulters vs Non-Defaulters)")
+            fig = px.bar(separation_df.head(8), x='ks_statistic', y='feature', orientation='h',
+                color='separation', color_discrete_map={'Strong':'#28a745','Moderate':'#ffc107','Weak':'#dc3545'},
+                title='KS Statistic per Feature')
+            fig.update_layout(height=350, yaxis={'categoryorder':'total ascending'})
+            st.plotly_chart(fig, use_container_width=True)
+            st.info("Features are non-Gaussian (right-skewed). KS statistic measures max CDF separation — no Gaussian assumption required.")
+        except Exception as e:
+            st.error(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
